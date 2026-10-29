@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plataforma FASTA Juan Pablo II</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pri:#4A6572;
+  --pri-dark:#334A54;
+  --accent:#6B9A8A;
+  --bg:#f5f7f9;
+  --card:#ffffff;
+  --text:#2d3e46;
+  --text2:#5a6b74;
+  --text3:#8a9aa3;
+  --border:#dde5e9;
+  --green:#2e7d4a;
+  --blue:#1a6ba3;
+  --orange:#c9850a;
+  --purple:#6a3b8a;
+  --red:#a34434;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(135deg,#4A6572 0%,#6B9A8A 100%);
+  min-height:100vh;color:var(--text);
+  display:flex;flex-direction:column;align-items:center;padding:20px;
+}
+.header-brand{
+  text-align:center;color:white;margin:20px 0 30px;
+}
+.header-brand h1{
+  font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:4px;
+  text-shadow:0 1px 2px rgba(0,0,0,0.1);
+}
+.header-brand .subtitle{
+  font-size:13px;opacity:0.9;font-weight:400;letter-spacing:0.3px;
+}
+.user-bar{
+  background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);
+  padding:10px 20px;border-radius:30px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  margin-bottom:30px;font-size:13px;
+}
+.user-bar .avatar{
+  width:34px;height:34px;border-radius:50%;background:var(--pri);
+  color:white;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:14px;
+}
+.user-bar .user-info{display:flex;flex-direction:column}
+.user-bar .user-name{font-weight:600;color:var(--text)}
+.user-bar .user-role{font-size:11px;color:var(--text2);letter-spacing:0.5px;text-transform:uppercase}
+.user-bar button{
+  background:var(--red);color:white;border:none;padding:6px 14px;
+  border-radius:16px;cursor:pointer;font-size:12px;font-weight:600;
+}
+.user-bar button:hover{background:#8a3828}
+
+.tiles{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:20px;
+  max-width:900px;width:100%;
+}
+.tile{
+  background:var(--card);border-radius:16px;padding:30px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  cursor:pointer;transition:all 0.2s ease;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  min-height:230px;justify-content:center;
+  position:relative;overflow:hidden;
+  border:1px solid var(--border);
+}
+.tile:hover{
+  transform:translateY(-4px);
+  box-shadow:0 8px 30px rgba(0,0,0,0.15);
+  border-color:var(--accent);
+}
+.tile.disabled{
+  opacity:0.55;cursor:not-allowed;
+}
+.tile.disabled:hover{
+  transform:none;box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  border-color:var(--border);
+}
+.tile.disabled::after{
+  content:"Próximamente";
+  position:absolute;top:14px;right:14px;
+  background:var(--orange);color:white;
+  font-size:10px;padding:3px 10px;border-radius:10px;
+  font-weight:700;letter-spacing:0.5px;
+}
+.tile .icon{font-size:56px;margin-bottom:14px;line-height:1}
+.tile h2{
+  font-size:18px;font-weight:700;color:var(--pri);margin-bottom:6px;
+  letter-spacing:-0.3px;
+}
+.tile p{font-size:12.5px;color:var(--text2);line-height:1.5;max-width:280px}
+
+.tile.convivencia .icon{color:var(--blue)}
+.tile.gei .icon{color:var(--green)}
+.tile.vista360 .icon{color:var(--purple)}
+.tile.panel-dir .icon{color:var(--orange)}
+
+.restricted-hint{
+  position:absolute;top:14px;right:14px;
+  background:var(--pri);color:white;font-size:10px;
+  padding:3px 10px;border-radius:10px;font-weight:700;letter-spacing:0.5px;
+}
+
+footer{
+  margin-top:40px;color:white;font-size:11px;opacity:0.75;text-align:center;
+}
+
+/* Login overlay */
+#loginOverlay{
+  position:fixed;inset:0;background:rgba(74,101,114,0.98);
+  display:flex;align-items:center;justify-content:center;z-index:100;
+}
+.login-box{
+  background:white;border-radius:16px;padding:36px 32px;
+  max-width:380px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2);
+}
+.login-box h2{
+  color:var(--pri);text-align:center;margin-bottom:4px;font-size:22px;
+}
+.login-box .login-sub{
+  text-align:center;color:var(--text2);font-size:12px;margin-bottom:24px;
+}
+.login-box label{
+  display:block;font-size:12px;font-weight:600;color:var(--text2);
+  margin-bottom:4px;letter-spacing:0.3px;
+}
+.login-box input{
+  width:100%;padding:10px 12px;border:1px solid var(--border);
+  border-radius:8px;font-size:14px;margin-bottom:14px;
+  font-family:inherit;color:var(--text);
+}
+.login-box input:focus{outline:none;border-color:var(--accent)}
+.login-box button{
+  width:100%;padding:11px;background:var(--pri);color:white;
+  border:none;border-radius:8px;font-size:14px;font-weight:700;
+  cursor:pointer;letter-spacing:0.3px;
+}
+.login-box button:hover{background:var(--pri-dark)}
+.login-box button:disabled{opacity:0.6;cursor:not-allowed}
+.login-error{
+  background:#fee;color:var(--red);padding:8px 10px;border-radius:6px;
+  font-size:12px;margin-bottom:12px;display:none;
+}
+
+@media (max-width:650px){
+  .tiles{grid-template-columns:1fr;gap:14px}
+  .tile{min-height:180px;padding:22px}
+  .tile .icon{font-size:48px}
+  .header-brand h1{font-size:22px}
+}
+</style>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <h2>🔐 Plataforma FASTA</h2>
+    <div class="login-sub">Colegio Juan Pablo II · Nivel Primario</div>
+    <div class="login-error" id="loginError"></div>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="docente@juanpablo2.redfasta.edu.ar" autocomplete="username">
+    <label>Contraseña</label>
+    <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    <button id="btnLogin" onclick="hacerLogin()">Ingresar</button>
+  </div>
+</div>
+
+<!-- Launcher principal (oculto hasta login) -->
+<div id="main" style="display:none;width:100%;display:none;flex-direction:column;align-items:center">
+
+  <div class="header-brand">
+    <h1>📚 Plataforma Institucional</h1>
+    <div class="subtitle">Colegio FASTA Juan Pablo II · Mendoza · Primaria</div>
+  </div>
+
+  <div class="user-bar" id="userBar">
+    <div class="avatar" id="userAvatar">?</div>
+    <div class="user-info">
+      <span class="user-name" id="userName">—</span>
+      <span class="user-role" id="userRole">—</span>
+    </div>
+    <button onclick="cerrarSesion()">Salir</button>
+  </div>
+
+  <div class="tiles">
+    <div class="tile convivencia" onclick="abrirApp('https://manologuevara2013-png.github.io/convivencia-aec/')">
+      <div class="icon">🤝</div>
+      <h2>Convivencia AEC</h2>
+      <p>Llamados de atención, reconocimientos de virtudes y seguimiento disciplinario</p>
+    </div>
+
+    <div class="tile gei" onclick="abrirApp('https://manologuevara2013-png.github.io/asistente-docente/')">
+      <div class="icon">📊</div>
+      <h2>Asistente Docente GEI</h2>
+      <p>Notas, evaluaciones, Aprendizajes Base y planilla DGE</p>
+    </div>
+
+    <div class="tile vista360 disabled">
+      <div class="icon">👤</div>
+      <h2>Vista Alumno 360°</h2>
+      <p>Académico + convivencia + inclusión + historial, todo integrado por alumno</p>
+    </div>
+
+    <div class="tile panel-dir disabled" id="tilePanelDir">
+      <div class="icon">📈</div>
+      <h2>Panel Dirección</h2>
+      <p>Estadísticas institucionales, promoción, reportes a supervisión</p>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 Colegio FASTA Juan Pablo II — Nivel Primario · Mendoza, Argentina<br>
+    Plataforma institucional v1.0
+  </footer>
+</div>
+
+<script>
+// =====================================================================
+// Launcher Plataforma FASTA — Login compartido con Convivencia + GEI
+// =====================================================================
+const SB_URL = "https://navsfrfgyyjxckmincmb.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hdnNmcmZneXlqeGNraW5jbWIiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczMjc2NDk5NSwiZXhwIjoyMDQ4MzQwOTk1fQ.OjQJ34bFfOALSmcrcDAHKqdX5SRENrzSSQcdCqnLZQc";
+
+let sb = null;
+let usuarioActual = null;
+
+// Inicializar Supabase
+if(window.supabase && window.supabase.createClient){
+  sb = window.supabase.createClient(SB_URL, SB_KEY);
+}
+
+// Al cargar: ver si ya hay sesión activa (viene de GEI o Convivencia o launcher)
+window.addEventListener('DOMContentLoaded', async () => {
+  if(!sb){
+    mostrarError('Error cargando Supabase. Recargá la página.');
+    return;
+  }
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if(session && session.user){
+      await cargarUsuario(session.user);
+    }
+  } catch(e){
+    console.warn('Sin sesión activa, mostrar login');
+  }
+});
+
+async function hacerLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const btn = document.getElementById('btnLogin');
+  if(!email || !pass){ mostrarError('Completá email y contraseña'); return; }
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if(error){ mostrarError('Credenciales incorrectas'); btn.disabled=false; btn.textContent='Ingresar'; return; }
+    await cargarUsuario(data.user);
+  } catch(e){
+    mostrarError('Error: ' + e.message);
+    btn.disabled = false; btn.textContent = 'Ingresar';
+  }
+}
+
+async function cargarUsuario(authUser){
+  try {
+    const { data, error } = await sb.from('usuarios')
+      .select('id, email, nombre, rol')
+      .eq('id', authUser.id)
+      .single();
+    if(error || !data){
+      // Usuario sin fila en public.usuarios: mostrar email solo
+      usuarioActual = { id: authUser.id, email: authUser.email, nombre: authUser.email, rol: 'sin_rol' };
+    } else {
+      usuarioActual = data;
+    }
+    mostrarLauncher();
+  } catch(e){
+    mostrarError('Error cargando perfil: ' + e.message);
+  }
+}
+
+function mostrarLauncher(){
+  document.getElementById('loginOverlay').style.display = 'none';
+  const main = document.getElementById('main');
+  main.style.display = 'flex';
+  // Avatar con inicial
+  const nombre = usuarioActual.nombre || usuarioActual.email || '?';
+  document.getElementById('userAvatar').textContent = nombre.charAt(0).toUpperCase();
+  document.getElementById('userName').textContent = nombre;
+  document.getElementById('userRole').textContent = (usuarioActual.rol || '').toUpperCase();
+
+  // Panel Dirección solo para admin/dir/coord/dev
+  const rolesPrivilegiados = ['admin','direccion','coordinador','desarrollador'];
+  const esPrivilegiado = rolesPrivilegiados.includes(usuarioActual.rol);
+  const tilePD = document.getElementById('tilePanelDir');
+  if(!esPrivilegiado){
+    tilePD.style.display = 'none';  // oculto totalmente para docentes/psicopedagoga
+  }
+}
+
+function mostrarError(msg){
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function abrirApp(url){
+  window.open(url, '_blank');
+}
+
+async function cerrarSesion(){
+  if(!confirm('¿Cerrar sesión? Vas a tener que ingresar email y contraseña de nuevo.')) return;
+  try {
+    await sb.auth.signOut();
+    usuarioActual = null;
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('btnLogin').disabled = false;
+    document.getElementById('btnLogin').textContent = 'Ingresar';
+  } catch(e){ alert('Error: ' + e.message); }
+}
+
+// Enter en el input de contraseña dispara login
+document.getElementById('loginPass').addEventListener('keydown', e => {
+  if(e.key === 'Enter') hacerLogin();
+});
+</script>
+
+</body>
+</html>
