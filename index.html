@@ -101,6 +101,7 @@ body{
 .tile.convivencia .icon{color:var(--blue)}
 .tile.gei .icon{color:var(--green)}
 .tile.vista360 .icon{color:var(--purple)}
+.tile.soe .icon{color:#c9850a}
 .tile.panel-dir .icon{color:var(--orange)}
 
 .restricted-hint{
@@ -210,6 +211,12 @@ footer{
       <p>Académico + convivencia + inclusión + historial, todo integrado por alumno</p>
     </div>
 
+    <div class="tile soe" onclick="abrirApp('https://manologuevara2013-png.github.io/soe-fasta/')">
+      <div class="icon">🧭</div>
+      <h2>SOE — Orientación Escolar</h2>
+      <p>Casos de inclusión, orientación vocacional, acompañamiento emocional, familia y docentes</p>
+    </div>
+
     <div class="tile panel-dir disabled" id="tilePanelDir">
       <div class="icon">📈</div>
       <h2>Panel Dirección</h2>
@@ -314,7 +321,7 @@ function mostrarError(msg){
 }
 
 function abrirApp(url){
-  window.open(url, '_blank');
+  window.location.href = url;
 }
 
 async function cerrarSesion(){
